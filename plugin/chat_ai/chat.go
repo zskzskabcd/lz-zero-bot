@@ -18,7 +18,7 @@ import (
 func init() {
 	engine := control.Register("chatAI", &ctrl.Options[*zero.Ctx]{
 		DisableOnDefault: false,
-		Brief:            "lz的 ChatGPT 插/opt/freedownloadmanager/fdm --hidden件",
+		Brief:            "lz的 ChatGPT 插件",
 		Help:             "自动触发",
 		OnEnable: func(ctx *zero.Ctx) {
 			ctx.SendChain(message.Text("ChatGPT 就绪"))
@@ -38,12 +38,11 @@ func Register(engine *control.Engine) {
 	// 对话记录
 	zero.OnMessage().SetBlock(false).SetPriority(0).Handle(logRecord)
 	// 群聊问题匹配
-	engine.OnKeywordGroup([]string{"请问", "话说", "机器人", "BOT", "bot", "Bot"}).SetBlock(true).Handle(aiChat)
+	engine.OnPrefixGroup([]string{"请问", "话说"}).SetBlock(true).Handle(aiChat)
 	// 私聊问题匹配
 	engine.OnMessage(zero.OnlyPrivate).SetBlock(true).Handle(aiChat)
 	// @机器人
 	engine.OnMessage(zero.OnlyToMe).SetBlock(true).Handle(aiChat)
-
 	// 图片OCR
 	engine.OnPrefix(`ocr`).SetBlock(true).Handle(imageOcr)
 	// 机器人模式切换
@@ -142,70 +141,36 @@ func aiChat(ctx *zero.Ctx) {
 	}
 	// 去除空行
 	answer = strings.Trim(answer, "\n")
-	MessageId := ctx.Send(answer)
+	ctx.Send(answer)
 	// 记录对话
 	dialog := dialogRecord.Dialog[id]
 	dialog.AddDialog(&DialogItem{
-		QID:       config.AllConfig.BotQQ,
-		QName:     config.GetBotRole(ctx.Event.UserID),
-		MessageID: MessageId.ID(),
-		Text:      answer,
-		Type:      "ai-answer",
-		Time:      time.Now().Unix(),
+		QID:   config.AllConfig.BotQQ,
+		QName: config.GetBotRole(ctx.Event.UserID),
+		Text:  answer,
+		Type:  "ai-answer",
+		Time:  time.Now().Unix(),
 	})
 }
 
 // 冒泡系统
 func checkBubble(ctx *zero.Ctx, dialog *Dialog, dialogItem DialogItem) {
-	// 规则1 一则消息，50s后无其他人回复，群聊只有一人发言，发送冒泡消息
+	// 规则1 一则消息，50s后无人回复，且群聊只有一人发言，发送冒泡消息
 	go func() {
 		time.Sleep(time.Second * 50)
 		dialog = dialogRecord.Dialog[getId(ctx)]
-		sender := dialogItem.QID
-		// 遍历
-		for _, item := range dialog.Dialogs {
-			if item.QID != sender {
-				return
-			}
-		}
-		// 发送冒泡消息
-		//sendBubble(ctx, dialog, "No one replied to the message. If it is a group notification message, please reply using the following template: \"[CQ:at,qq=all] + notification content\". If it's a technical question, please provide a solution. Otherwise, reply following template: \"NO NEED TO REPLY\".")s
-		sendBubble(ctx, dialog, "Someone sent a message in the group chat, and now no one has replied. If there is not enough context or it is a notification message, a reply is not necessary. Please decide whether a reply is needed. If a reply is needed, please provide a reply. Otherwise, reply following template: \"[cq:no_send]\".")
-	}()
-
-	// 规则2 分钟内连续发言6次以上，参与人数大于3，发送冒泡消息
-	go func() {
-		time.Sleep(time.Second * 80)
-		dialog = dialogRecord.Dialog[getId(ctx)]
-		// 参与人员
-		senders := make(map[int64]bool)
-		// 获取最近一分钟消息
-		recentDialog := dialog.GetRecentMinuteDialog()
-		if len(recentDialog) < 8 {
-			return
-		}
-		// 遍历
-		for _, item := range recentDialog {
-			senders[item.QID] = true
-		}
-		if len(senders) > 3 {
+		latest := dialog.GetLastDialog()
+		if latest != nil && latest.QID == dialogItem.QID && len(dialog.Dialogs) == 1 && latest.Time == dialogItem.Time {
 			// 发送冒泡消息
-			sendBubble(ctx, dialog, "It looks lively in the group now, please join in. Do not seek to provide help. IN CHINESE!")
+			sendBubble(ctx, dialog, "Reply to the message in the group chat since no one has responded. IN CHINESE!")
 		}
 	}()
 
 }
 
-var LastBubbleTime = make(map[int64]int64)
-
 // 发送冒泡消息
 func sendBubble(ctx *zero.Ctx, dialog *Dialog, reason string) {
-	// 30S内不重复发送冒泡消息
-	if time.Now().Unix()-LastBubbleTime[getId(ctx)] < 30 {
-		return
-	}
-	var chatDialog []ChatAI.ChatGPTRequestMessage
-	chatDialog = append(chatDialog, BuildChatDialog(ctx)...)
+	chatDialog := BuildChatDialog(ctx)
 	// 新增系统冒泡消息
 	chatDialog = append(chatDialog, ChatAI.ChatGPTRequestMessage{
 		Role:    "system",
@@ -214,10 +179,6 @@ func sendBubble(ctx *zero.Ctx, dialog *Dialog, reason string) {
 	answer, err := ChatAI.ChatCompletion(chatDialog)
 	if err != nil {
 		ctx.Send("AI出错了" + err.Error())
-		return
-	}
-	// 如果结果中包含[CQ:no_send]，则不发送
-	if strings.Contains(answer, "[CQ:no_send]") {
 		return
 	}
 	ctx.Send(answer)

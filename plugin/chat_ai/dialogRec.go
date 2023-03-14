@@ -10,12 +10,11 @@ import (
 )
 
 type DialogItem struct {
-	QID       int64
-	QName     string
-	MessageID int64
-	Text      string
-	Type      string
-	Time      int64
+	QID   int64
+	QName string
+	Text  string
+	Type  string
+	Time  int64
 }
 
 type Dialog struct {
@@ -83,43 +82,15 @@ func (d *Dialog) GetDialog(maxLen int) string {
 // GetDialogItem 获取指定字节长度对话记录
 func (d *Dialog) GetDialogItem(maxLen int) []DialogItem {
 	var dialog []DialogItem
-	totalLen := 0
 	for i := len(d.Dialogs) - 1; i >= 0; i-- {
 		item := d.Dialogs[i]
 		// 限制最大字节数 但不限制最后一条
-		if totalLen+len(item.Text) > maxLen && i != len(d.Dialogs)-1 {
+		if len(dialog)+len(item.Text) > maxLen && i != len(d.Dialogs)-1 {
 			return dialog
 		}
 		dialog = append(dialog, item)
-		totalLen += len(item.Text)
 	}
 	return dialog
-}
-
-// GetDialogItemsByTimeSlot 获取指定时间段内的对话
-func (d *Dialog) GetDialogItemsByTimeSlot(startTime, endTime int64) []DialogItem {
-	var dialog []DialogItem
-	for i := len(d.Dialogs) - 1; i >= 0; i-- {
-		item := d.Dialogs[i]
-		if item.Time < startTime {
-			break
-		}
-		if item.Time > endTime {
-			continue
-		}
-		dialog = append(dialog, item)
-	}
-	return dialog
-}
-
-// GetRecentTimeDialog 获取过去指定时间的对话
-func (d *Dialog) GetRecentTimeDialog(pastTime int64) []DialogItem {
-	return d.GetDialogItemsByTimeSlot(time.Now().Unix()-pastTime, time.Now().Unix())
-}
-
-// GetRecentMinuteDialog 获取过去一分钟的对话
-func (d *Dialog) GetRecentMinuteDialog() []DialogItem {
-	return d.GetRecentTimeDialog(60)
 }
 
 // GetDialogByCount 获取指定条数的对话 限制最大字节数为4k
@@ -172,17 +143,16 @@ func logRecord(ctx *zero.Ctx) {
 		dialogRecord.Dialog[id] = dialog
 	}
 	dialogItem := DialogItem{
-		QID:       ctx.Event.UserID,
-		QName:     ctx.Event.Sender.Name(),
-		Text:      message,
-		Type:      msgType,
-		MessageID: ctx.Event.MessageID.(int64),
-		Time:      time.Now().Unix(),
+		QID:   ctx.Event.UserID,
+		QName: ctx.Event.Sender.NickName,
+		Text:  message,
+		Type:  msgType,
+		Time:  time.Now().Unix(),
 	}
 	dialog.AddDialog(&dialogItem)
 
 	// 冒泡系统
-	go checkBubble(ctx, dialog, dialogItem)
+	checkBubble(ctx, dialog, dialogItem)
 }
 
 // 构建对话
@@ -211,17 +181,12 @@ func buildDialog(ctx *zero.Ctx) string {
 	return dialog
 }
 
-const (
-	CQGroupPrompt = "If replying to someone within a group chat, please add [CQ:at,qq=QID] before the result; To notify all member, add [CQ:at,qq=all] before the result; If no reply is needed, add [CQ:no_send] before the result; To reply to a specific message, add [CQ:reply,id=MID] before the result;"
-)
-
 // BuildChatDialog 构建对话 - chatGPT
 func BuildChatDialog(ctx *zero.Ctx) []ChatAI.ChatGPTRequestMessage {
 	var dialog []DialogItem
 	var result []ChatAI.ChatGPTRequestMessage
 	id := getId(ctx)
 	conf := config.GetBotConfig(id)
-	isGroup := ctx.Event.GroupID != 0
 	d, exist := dialogRecord.Dialog[id]
 	if !exist {
 		d = &Dialog{
@@ -242,14 +207,10 @@ func BuildChatDialog(ctx *zero.Ctx) []ChatAI.ChatGPTRequestMessage {
 		Role:    "system",
 		Content: modePrefix,
 	})
-	systemPrefix := "Your answer should be in Chinese"
-	if isGroup {
-		systemPrefix = CQGroupPrompt + systemPrefix
-	}
 	// 插入系统前缀
 	result = append(result, ChatAI.ChatGPTRequestMessage{
 		Role:    "system",
-		Content: systemPrefix,
+		Content: "If replying to someone within a group chat, please add [CQ:at,qq=QID] before the result; Your answer should be in Chinese",
 	})
 	// 插入时间前缀
 	result = append(result, ChatAI.ChatGPTRequestMessage{
@@ -264,17 +225,10 @@ func BuildChatDialog(ctx *zero.Ctx) []ChatAI.ChatGPTRequestMessage {
 				Content: fmt.Sprintf("%s", item.Text),
 			})
 		} else {
-			if isGroup {
-				result = append(result, ChatAI.ChatGPTRequestMessage{
-					Role:    "user",
-					Content: fmt.Sprintf("[QName:%s QID:%d MID:%d]: %s", item.QName, item.QID, item.MessageID, item.Text),
-				})
-			} else {
-				result = append(result, ChatAI.ChatGPTRequestMessage{
-					Role:    "user",
-					Content: fmt.Sprintf("%s", item.Text),
-				})
-			}
+			result = append(result, ChatAI.ChatGPTRequestMessage{
+				Role:    "user",
+				Content: fmt.Sprintf("[QName:%s QID:%d]: %s", item.QName, item.QID, item.Text),
+			})
 		}
 
 	}
