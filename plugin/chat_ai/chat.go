@@ -38,11 +38,12 @@ func Register(engine *control.Engine) {
 	// 对话记录
 	zero.OnMessage().SetBlock(false).SetPriority(0).Handle(logRecord)
 	// 群聊问题匹配
-	engine.OnPrefixGroup([]string{"请问", "话说"}).SetBlock(true).Handle(aiChat)
+	engine.OnKeywordGroup([]string{"请问", "话说", "机器人", "BOT", "bot", "Bot"}).SetBlock(true).Handle(aiChat)
 	// 私聊问题匹配
 	engine.OnMessage(zero.OnlyPrivate).SetBlock(true).Handle(aiChat)
 	// @机器人
 	engine.OnMessage(zero.OnlyToMe).SetBlock(true).Handle(aiChat)
+
 	// 图片OCR
 	engine.OnPrefix(`ocr`).SetBlock(true).Handle(imageOcr)
 	// 机器人模式切换
@@ -168,18 +169,19 @@ func checkBubble(ctx *zero.Ctx, dialog *Dialog, dialogItem DialogItem) {
 			}
 		}
 		// 发送冒泡消息
-		sendBubble(ctx, dialog, "Reply to the message in the group chat since no one has responded. IN CHINESE!")
+		//sendBubble(ctx, dialog, "No one replied to the message. If it is a group notification message, please reply using the following template: \"[CQ:at,qq=all] + notification content\". If it's a technical question, please provide a solution. Otherwise, reply following template: \"NO NEED TO REPLY\".")s
+		sendBubble(ctx, dialog, "Someone sent a message in the group chat, and now no one has replied. If there is not enough context or it is a notification message, a reply is not necessary. Please decide whether a reply is needed. If a reply is needed, please provide a reply. Otherwise, reply following template: \"[cq:no_send]\".")
 	}()
 
-	// 规则2 一分钟内连续发言10次以上，参与人数大于3，发送冒泡消息
+	// 规则2 分钟内连续发言6次以上，参与人数大于3，发送冒泡消息
 	go func() {
-		time.Sleep(time.Second * 60)
+		time.Sleep(time.Second * 80)
 		dialog = dialogRecord.Dialog[getId(ctx)]
 		// 参与人员
 		senders := make(map[int64]bool)
 		// 获取最近一分钟消息
 		recentDialog := dialog.GetRecentMinuteDialog()
-		if len(recentDialog) < 10 {
+		if len(recentDialog) < 8 {
 			return
 		}
 		// 遍历
@@ -188,7 +190,7 @@ func checkBubble(ctx *zero.Ctx, dialog *Dialog, dialogItem DialogItem) {
 		}
 		if len(senders) > 3 {
 			// 发送冒泡消息
-			sendBubble(ctx, dialog, "It looks lively in the group now, please join in. IN CHINESE!")
+			sendBubble(ctx, dialog, "It looks lively in the group now, please join in. Do not seek to provide help. IN CHINESE!")
 		}
 	}()
 
@@ -202,7 +204,8 @@ func sendBubble(ctx *zero.Ctx, dialog *Dialog, reason string) {
 	if time.Now().Unix()-LastBubbleTime[getId(ctx)] < 30 {
 		return
 	}
-	chatDialog := BuildChatDialog(ctx)
+	var chatDialog []ChatAI.ChatGPTRequestMessage
+	chatDialog = append(chatDialog, BuildChatDialog(ctx)...)
 	// 新增系统冒泡消息
 	chatDialog = append(chatDialog, ChatAI.ChatGPTRequestMessage{
 		Role:    "system",
@@ -211,6 +214,10 @@ func sendBubble(ctx *zero.Ctx, dialog *Dialog, reason string) {
 	answer, err := ChatAI.ChatCompletion(chatDialog)
 	if err != nil {
 		ctx.Send("AI出错了" + err.Error())
+		return
+	}
+	// 如果结果中包含[CQ:no_send]，则不发送
+	if strings.Contains(answer, "[CQ:no_send]") {
 		return
 	}
 	ctx.Send(answer)
