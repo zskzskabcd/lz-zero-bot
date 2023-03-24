@@ -129,7 +129,7 @@ func ChatCompletions(reqConf ChatGPTRequestBody) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Printf("request gtp json string : %v", string(requestData))
+	//log.Printf("request gtp json string : %v", string(requestData))
 	req, err := http.NewRequest("POST", BASEURL+"chat/completions", bytes.NewBuffer(requestData))
 	if err != nil {
 		return "", err
