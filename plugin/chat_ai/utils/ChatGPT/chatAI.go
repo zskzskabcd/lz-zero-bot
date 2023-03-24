@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -128,7 +129,7 @@ func ChatCompletions(reqConf ChatGPTRequestBody) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//log.Printf("request gtp json string : %v", string(requestData))
+	log.Printf("request gtp json string : %v", string(requestData))
 	req, err := http.NewRequest("POST", BASEURL+"chat/completions", bytes.NewBuffer(requestData))
 	if err != nil {
 		return "", err
@@ -137,11 +138,18 @@ func ChatCompletions(reqConf ChatGPTRequestBody) (string, error) {
 	apiKey := chatAI.GetChatGPTConfig().APIKey
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
+	// 使用代理 代理到本机55565端口
 	client := &http.Client{
 		Timeout: 100 * time.Second,
+		Transport: &http.Transport{
+			Proxy: func(request *http.Request) (*url.URL, error) {
+				return url.Parse("socks5://127.0.0.1:55565")
+			},
+		},
 	}
 	response, err := client.Do(req)
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 	defer func(Body io.ReadCloser) {

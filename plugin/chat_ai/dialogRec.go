@@ -82,13 +82,22 @@ func (d *Dialog) GetDialog(maxLen int) string {
 // GetDialogItem 获取指定字节长度对话记录
 func (d *Dialog) GetDialogItem(maxLen int) []DialogItem {
 	var dialog []DialogItem
-	for i := len(d.Dialogs) - 1; i >= 0; i-- {
+	// 非空判断
+	if len(d.Dialogs) == 0 {
+		return dialog
+	}
+	// 总对话文字长度（字节）
+	totalLen := 0
+	dialog = append(dialog, d.Dialogs[len(d.Dialogs)-1])
+	totalLen += len(d.Dialogs[len(d.Dialogs)-1].Text)
+	for i := len(d.Dialogs) - 2; i >= 0; i-- {
 		item := d.Dialogs[i]
-		// 限制最大字节数 但不限制最后一条
-		if len(dialog)+len(item.Text) > maxLen && i != len(d.Dialogs)-1 {
+		// 限制最大字节数
+		if totalLen+len(item.Text) > maxLen {
 			return dialog
 		}
 		dialog = append(dialog, item)
+		totalLen += len(item.Text)
 	}
 	return dialog
 }
