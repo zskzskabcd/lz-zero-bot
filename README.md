@@ -17,7 +17,7 @@
 
   [![go](https://goreportcard.com/badge/github.com/FloatTech/ZeroBot-Plugin?style=flat-square&logo=go)](https://goreportcard.com/badge/github.com/FloatTech/ZeroBot-Plugin)
   [![onebot](https://img.shields.io/badge/onebot-v11-black?style=flat-square&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABwCAMAAADxPgR5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAxQTFRF////29vbr6+vAAAAk1hCcwAAAAR0Uk5T////AEAqqfQAAAKcSURBVHja7NrbctswDATQXfD//zlpO7FlmwAWIOnOtNaTM5JwDMa8E+PNFz7g3waJ24fviyDPgfhz8fHP39cBcBL9KoJbQUxjA2iYqHL3FAnvzhL4GtVNUcoSZe6eSHizBcK5LL7dBr2AUZlev1ARRHCljzRALIEog6H3U6bCIyqIZdAT0eBuJYaGiJaHSjmkYIZd+qSGWAQnIaz2OArVnX6vrItQvbhZJtVGB5qX9wKqCMkb9W7aexfCO/rwQRBzsDIsYx4AOz0nhAtWu7bqkEQBO0Pr+Ftjt5fFCUEbm0Sbgdu8WSgJ5NgH2iu46R/o1UcBXJsFusWF/QUaz3RwJMEgngfaGGdSxJkE/Yg4lOBryBiMwvAhZrVMUUvwqU7F05b5WLaUIN4M4hRocQQRnEedgsn7TZB3UCpRrIJwQfqvGwsg18EnI2uSVNC8t+0QmMXogvbPg/xk+Mnw/6kW/rraUlvqgmFreAA09xW5t0AFlHrQZ3CsgvZm0FbHNKyBmheBKIF2cCA8A600aHPmFtRB1XvMsJAiza7LpPog0UJwccKdzw8rdf8MyN2ePYF896LC5hTzdZqxb6VNXInaupARLDNBWgI8spq4T0Qb5H4vWfPmHo8OyB1ito+AysNNz0oglj1U955sjUN9d41LnrX2D/u7eRwxyOaOpfyevCWbTgDEoilsOnu7zsKhjRCsnD/QzhdkYLBLXjiK4f3UWmcx2M7PO21CKVTH84638NTplt6JIQH0ZwCNuiWAfvuLhdrcOYPVO9eW3A67l7hZtgaY9GZo9AFc6cryjoeFBIWeU+npnk/nLE0OxCHL1eQsc1IciehjpJv5mqCsjeopaH6r15/MrxNnVhu7tmcslay2gO2Z1QfcfX0JMACG41/u0RrI9QAAAABJRU5ErkJggg==)](https://t.me/zerobotplugin)
-  [![zerobot](https://img.shields.io/badge/zerobot-v1.6.10-black?style=flat-square&logo=go)](https://github.com/wdvxdr1123/ZeroBot)
+  [![zerobot](https://img.shields.io/badge/zerobot-v1.6.11-black?style=flat-square&logo=go)](https://github.com/wdvxdr1123/ZeroBot)
   [![license](https://img.shields.io/github/license/FloatTech/ZeroBot-Plugin.svg?style=flat-square&logo=gnu)](https://raw.githubusercontent.com/FloatTech/ZeroBot-Plugin/master/LICENSE)
   [![tencent-qq](https://img.shields.io/badge/group-1048452984-red?style=flat-square&logo=tencent-qq)](https://jq.qq.com/?_wv=1027&k=QMb7x1mM)
   [![telegram](https://img.shields.io/badge/Telegram-click%20me-informational?style=flat-square&logo=telegram)](https://t.me/zerobotplugin)
@@ -436,11 +436,11 @@ print("run[CQ:image,file="+j["img"]+"]")
 
 </details>
 <details>
-  <summary>百度一下</summary>
+  <summary>百度百科</summary>
 
   `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/baidu"`
 
-  - [x] 百度下[xxx]
+  - [x] 百度/百科[xxx]
 
 </details>
 <details>
@@ -559,7 +559,7 @@ print("run[CQ:image,file="+j["img"]+"]")
   
   - [x] b站推送列表
   
-  - [x] 拉取b站推送 (使用job执行定时任务------记录在"@every 10s"触发的指令) 
+  - [x] 拉取b站推送 (使用job执行定时任务------记录在"@every 5m"触发的指令) 
 
 </details>
 <details>
@@ -570,14 +570,6 @@ print("run[CQ:image,file="+j["img"]+"]")
   - [x] 书评[xxx]
 
   - [x] 随机书评
-
-</details>
-<details>
-  <summary>打断复读</summary>
-
-  `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/breakrepeat"`
-
-  - [x] (打断三次以上的复读)
 
 </details>
 <details>
@@ -1279,9 +1271,25 @@ print("run[CQ:image,file="+j["img"]+"]")
 
   - [x] 卖萌[@xxx]
 
-  - [x] 抽老婆[@xxx]
+  - [x] 今日老婆[@xxx]
 
   - [x] 黄油角色[@xxx]
+
+</details>
+<details>
+  <summary>steam</summary>
+
+  `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/steam"`
+
+  - [x] steam[添加|删除]订阅xxxxx
+
+  - [x] steam查看订阅
+
+  - [x] steam绑定 api key xxxxxxx
+
+  - [x] 查看apikey
+
+  - [x] 拉取steam订阅 (使用job执行定时任务------记录在"@every 1m"触发的指令) 
 
 </details>
 <details>
@@ -1443,19 +1451,11 @@ print("run[CQ:image,file="+j["img"]+"]")
 
 </details>
 <details>
-  <summary>月幕galgame图</summary>
+  <summary>抽老婆</summary>
 
-  `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/ymgal"`
+  `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/wife"`
 
-  - [x] 随机galCG
-
-  - [x] 随机gal表情包
-
-  - [x] galCG[xxx]
-
-  - [x] gal表情包[xxx]
-
-  - [x] 更新gal
+  - [x] 抽老婆
 
 </details>
 <details>
@@ -1504,14 +1504,19 @@ print("run[CQ:image,file="+j["img"]+"]")
 	
 </details>
 <details>
-  <summary>词典匹配回复</summary>
+  <summary>月幕galgame图</summary>
 
-  `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/thesaurus"`
+  `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/ymgal"`
 
-  - [x] 切换[kimo|傲娇|可爱]词库
-  - [x] 设置词库触发概率0.x (0<x<9)
+  - [x] 随机galCG
 
-  - 注：由于占用资源较大，默认注释。
+  - [x] 随机gal表情包
+
+  - [x] galCG[xxx]
+
+  - [x] gal表情包[xxx]
+
+  - [x] 更新gal
 
 </details>
 <details>
@@ -1549,6 +1554,23 @@ print("run[CQ:image,file="+j["img"]+"]")
   - [x] 设置回复模式[青云客 | 小爱 | ChatGPT]
 
   - [x] 设置 ChatGPT api key xxx
+
+</details>
+<details>
+  <summary>词典匹配回复</summary>
+
+  `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/thesaurus"`
+
+  - [x] 切换[kimo|傲娇|可爱]词库
+  - [x] 设置词库触发概率0.x (0<x<9)
+
+</details>
+<details>
+  <summary>打断复读</summary>
+
+  `import _ "github.com/FloatTech/ZeroBot-Plugin/plugin/breakrepeat"`
+
+  - [x] (打断三次以上的复读)
 
 </details>
 
