@@ -83,8 +83,10 @@ func (d *Dialog) GetDialog(maxLen int) string {
 // GetDialogItem 获取指定字节长度对话记录
 func (d *Dialog) GetDialogItem(maxLen int) []DialogItem {
 	var dialog []DialogItem
-	totalLen := 0
-	for i := len(d.Dialogs) - 1; i >= 0; i-- {
+	lastDialog := d.GetLastDialog()
+	dialog = append(dialog, *lastDialog)
+	totalLen := len(lastDialog.Text)
+	for i := len(d.Dialogs) - 2; i >= 0; i-- {
 		item := d.Dialogs[i]
 		// 限制最大字节数
 		if totalLen+len(item.Text) > maxLen {
@@ -186,7 +188,8 @@ func buildDialog(ctx *zero.Ctx) string {
 }
 
 const (
-	CQGroupPrompt = "If replying to someone within a group chat, please add [CQ:at,qq=QID] before the result; To notify all member, add [CQ:at,qq=all] before the result; If no reply is needed, add [CQ:no_send] before the result; To reply to a specific message, add [CQ:reply,id=MID] before the result;"
+	CQGroupPrompt   = "Mashiro is currently in a group chat.\nMashiro uses [CQ:at,qq=QID] to specify a reply to someone.\nMashiro uses [CQ:reply,id=MID] to reply to a specific message.\nMashiro uses [CQ:at,qq=all] to notify all group chat members.\nMashiro uses [CQ:no_send] to indicate that a reply is not necessary."
+	CQPrivatePrompt = "Mashiro is currently in a private conversation"
 )
 
 // BuildChatDialog 构建对话 - chatGPT
@@ -216,9 +219,11 @@ func BuildChatDialog(ctx *zero.Ctx) []ChatAI.ChatGPTRequestMessage {
 		Role:    "system",
 		Content: modePrefix,
 	})
-	systemPrefix := "Your answer should be in Chinese"
+	systemPrefix := ""
 	if isGroup {
-		systemPrefix = CQGroupPrompt + systemPrefix
+		systemPrefix = CQGroupPrompt
+	} else {
+		systemPrefix = CQPrivatePrompt
 	}
 	// 插入系统前缀
 	result = append(result, ChatAI.ChatGPTRequestMessage{
