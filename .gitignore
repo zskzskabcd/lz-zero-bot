@@ -8,3 +8,6 @@ nohup.out
 zerobot
 ZeroBot-Plugin*
 *.syso
+bin/
+bin/*
+data/chatAI/*
