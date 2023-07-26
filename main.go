@@ -261,7 +261,7 @@ func init() {
 			config.Z.Driver[i] = w
 		}
 		for i, s := range config.S {
-			config.Z.Driver[i+len(config.W)] = s
+			config.Z.Driver[i+len(config.W)] = driver.NewWebSocketServer(16, s.Url, s.AccessToken)
 		}
 		logrus.Infoln("[main] 从", *runcfg, "读取配置文件")
 		return
@@ -295,7 +295,7 @@ func init() {
 func main() {
 	rand.Seed(time.Now().UnixNano()) // 全局 seed，其他插件无需再 seed
 	// 帮助
-	zero.OnFullMatchGroup([]string{"/help", ".help", "菜单"}, zero.OnlyToMe).SetBlock(true).
+	zero.OnFullMatchGroup([]string{"help", "/help", ".help", "菜单"}, zero.OnlyToMe).SetBlock(true).
 		Handle(func(ctx *zero.Ctx) {
 			ctx.SendChain(message.Text("\n可发送\"/服务列表\"查看 bot 功能"))
 		})
