@@ -143,7 +143,7 @@ func ChatCompletions(reqConf ChatGPTRequestBody) (string, error) {
 		Timeout: 100 * time.Second,
 		Transport: &http.Transport{
 			Proxy: func(request *http.Request) (*url.URL, error) {
-				return url.Parse("socks5://127.0.0.1:55565")
+				return url.Parse("socks5://127.0.0.1:7890")
 			},
 		},
 	}
